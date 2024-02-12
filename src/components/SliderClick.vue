@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, reactive } from 'vue';
-import GameBoard from './components/GameBoard.vue'
+import GameBoard from './GameBoard.vue'
 
 const cells = reactive([
   { id: 1, value: 'Enemy', health: 9, },
@@ -55,17 +55,18 @@ const getNewZones = () => {
 
 
 // Firing
-const isFiring = ref(false);
+const isReadyToFire = ref(false);
+
 const damageEnemy = () => {
   cells[0].health -= 1;
   if (cells[0].health <= 0) {
     message.value = 'you win!';
   }
-  isFiring.value = false;
+  isReadyToFire.value = false;
 };
 const fireBullet = () => {
-  message.value = 'firing';
-  // create line element
+  message.value = 'firing...';
+
   const line = document.createElement('div');
 
   line.style.position = 'absolute';
@@ -81,21 +82,23 @@ const fireBullet = () => {
 
   document.body.appendChild(line);
 
+  // fade line out
   setTimeout(() => {
     line.style.opacity = '0';
     line.style.background = 'red';
     line.style.boxShadow = '0 0 1px 1px rgba(255, 0, 0, 0.5)';
   }, 200);
 
+  // remove line
   setTimeout(() => {
     line.remove();
-    message.value = line;
+    message.value = "fired.";
   }, 500);
 }
 
 const handleClick = () => {
-  if (!isFiring.value) {
-    isFiring.value = true;
+  if (!isReadyToFire.value) {
+    isReadyToFire.value = true;
     return;
   }
 
@@ -130,7 +133,7 @@ const cards = reactive([
     <GameBoard :cells="cells" />
 
 
-    <div class="click-bar" v-if="isFiring">
+    <div class="click-bar" v-if="isReadyToFire">
       <div class="click-bar_current" ref="click-bar-current" :style="sliderCss">
         {{ sliderValue }}
       </div>
@@ -172,13 +175,13 @@ const cards = reactive([
 
 .button {
   /* border: none; */
-  border: 1px solid #448;
-  padding: 10px 20px;
+  /* border: 1px solid #448; */
+  /* padding: 10px 20px; */
   border-radius: 5px;
-  font-size: 20px;
+  /* font-size: 20px; */
   /* cursor: pointer; */
-  width: 90%;
-  height: 5em;
+  /* width: 90%; */
+  /* height: 5em; */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -238,7 +241,7 @@ const cards = reactive([
   top: 0;
   left: 0;
   width: 100vw;
-  height: 30vh;
+  height: 0vh;
   background: linear-gradient(90deg, #006aff 0%, transparent 3%, transparent 97%, #006aff 100%);
   animation: slide 2s ease-in-out infinite;
   opacity: 0.3;
@@ -259,7 +262,7 @@ const cards = reactive([
   100% {
     transform: translateY(-10vh);
     opacity: 0;
-    height: 0;
+    height: 200vw;
   }
 }
 </style>
