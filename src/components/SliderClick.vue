@@ -7,7 +7,6 @@ const cells = reactive([
   { id: 2, value: 'You', health: 9 },
 ]);
 
-
 // sliding bar
 const sliderValue = ref(50);
 const sliderDirection = ref(1);
@@ -51,8 +50,6 @@ const getNewZones = () => {
     criticalZones[index] = newZone;
   });
 };
-
-
 
 // Firing
 const isReadyToFire = ref(false);

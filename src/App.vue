@@ -1,18 +1,25 @@
 <script setup>
+import { ref } from 'vue';
 // import MirrorGame from './components/MirrorGame.vue';
 // import AlignGame from './components/AlignGame.vue';
 // import GameBoard from './components/GameBoard.vue';
-// import SliderClick from './components/SliderClick.vue';
+import SliderClick from './components/SliderClick.vue';
 import JustSlider from './components/JustSlider.vue';
+
+const currentGame = ref('JustSlider');
+const games = ['MirrorGame', 'AlignGame', 'SliderClick', 'JustSlider'];
 </script>
 
 <template>
     <div class="screen">
+        <div class="game-options">
+            <button v-for="game in games" @click="currentGame = game">{{ game }}</button>
+        </div>
+
         <!-- <MirrorGame class="game"/> -->
         <!-- <AlignGame class="game" /> -->
-        <!-- <GameBoard class="game" /> -->
-        <!-- <SliderClick class="game" /> -->
-        <JustSlider class="game" />
+        <SliderClick v-if="currentGame === 'SliderClick'" class="game" />
+        <JustSlider v-if="currentGame === 'JustSlider'" class="game" />
     </div>
 </template>
 
@@ -32,6 +39,16 @@ import JustSlider from './components/JustSlider.vue';
     width: 100vw;
     height: 100dvh;
     /* make it fullscreen */
+}
+.game-options {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    display: flex;
+    justify-content: space-around;
+
+    z-index: 1;
 }
 
 .game {

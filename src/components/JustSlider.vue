@@ -59,6 +59,7 @@ const hitEffectCss = computed(() => {
 
 <template>
     <div>
+        <GameBoard :cells="cells" />
         <div class="slider" :style="hitEffectCss">
             <div class="slider-current" :style="sliderCss"></div>
             <div class="slider-critical-zone" :style="`height: ${criticalZone[1] - criticalZone[0]}%; top: ${criticalZone[0]}%;`"></div>
