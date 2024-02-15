@@ -1,25 +1,16 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-
+import { ref, onMounted, reactive } from 'vue';
 
 const image1 = ref(null);
 const image2 = ref(null);
 const image3 = ref(null);
+const images = reactive([image1, image2, image3]);
 
-
-
-onMounted(() => {
-    // randomize the position of each image on the screen
-    image1.value.style.top = Math.random() * 100 + '%';
-    image1.value.style.left = Math.random() * 100 + '%';
-    image2.value.style.top = Math.random() * 100 + '%';
-    image2.value.style.left = Math.random() * 100 + '%';
-    image3.value.style.top = Math.random() * 100 + '%';
-
-    // create a random target on the screen
+const createTarget = () => {
     const x = Math.random() * window.innerWidth;
     const y = Math.random() * window.innerHeight;
     const target = document.createElement('div');
+    target.classList.add('target');
     target.style.width = '10px';
     target.style.height = '10px';
     target.style.background = 'red';
@@ -27,17 +18,56 @@ onMounted(() => {
     target.style.top = y + 'px';
     target.style.left = x + 'px';
     document.body.appendChild(target);
+};
 
-    setInterval(() => {
-        // find the distance between target and image
-        const x1 = parseFloat(image1.value.style.left) - x;
-        const y1 = parseFloat(image1.value.style.top) - y;
-        // const distance1 = Math.sqrt(x1 * x1 + y1 * y1);
-        // const image1move = 10 / distance1;
-        // image1.value.style.top = parseFloat(image1.value.style.top) + y1 * image1move + 'px';
-        // image1.value.style.left = parseFloat(image1.value.style.left) + x1 * image1move + 'px';
-    }, 500);
+// on click, remove all targets
+window.addEventListener('click', () => {
+    clearTargets();
+    createTarget();
+    randomizeImagePositions();
 });
+
+const randomizeImagePositions = () => {
+    images.forEach(image => {
+        image.value.style.top = Math.random() * 100 + '%';
+        image.value.style.left = Math.random() * 100 + '%';
+    });
+};
+
+const clearTargets = () => {
+    const targets = document.querySelectorAll('.target');
+    targets.forEach(target => target.remove());
+};
+
+onMounted(() => {
+    randomizeImagePositions();
+    clearTargets();
+    createTarget();
+});
+
+window.addEventListener('mousemove', (e) => {
+    images.forEach(image => moveImageToTarget(image.value));
+});
+
+const moveImageToTarget = (image) => {
+    // find location of image
+    const x1 = image.getBoundingClientRect().x;
+    const y1 = image.getBoundingClientRect().y;
+
+    // find location of target
+    const target = document.querySelector('.target');
+    if (!target) return;
+    const targetX = target.getBoundingClientRect().x;
+    const targetY = target.getBoundingClientRect().y;
+
+    // move image towards the target
+    const dx1 = targetX - x1;
+    const dy1 = targetY - y1;
+    const angle1 = Math.atan2(dy1, dx1);
+    image.style.left = x1 + Math.cos(angle1) + 'px';
+    image.style.top = y1 + Math.sin(angle1) + 'px'; 
+};
+
 </script>
 
 <template>
@@ -57,8 +87,7 @@ onMounted(() => {
     top: 50%;
     left: 50%;
 
-    mix-blend-mode:color-dodge;
-    /* transform: translate(-50%, -50%); */
+    mix-blend-mode: lighten;
 }
 .image-1 {
     background: red;

@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 // import MirrorGame from './components/MirrorGame.vue';
-// import AlignGame from './components/AlignGame.vue';
+import AlignGame from './components/AlignGame.vue';
 // import GameBoard from './components/GameBoard.vue';
 import SliderClick from './components/SliderClick.vue';
 import JustSlider from './components/JustSlider.vue';
@@ -17,7 +17,7 @@ const games = ['MirrorGame', 'AlignGame', 'SliderClick', 'JustSlider'];
         </div>
 
         <!-- <MirrorGame class="game"/> -->
-        <!-- <AlignGame class="game" /> -->
+        <AlignGame v-if="currentGame === 'AlignGame'" class="game" />
         <SliderClick v-if="currentGame === 'SliderClick'" class="game" />
         <JustSlider v-if="currentGame === 'JustSlider'" class="game" />
     </div>
