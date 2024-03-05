@@ -5,9 +5,10 @@ import AlignGame from './components/AlignGame.vue';
 // import GameBoard from './components/GameBoard.vue';
 import SliderClick from './components/SliderClick.vue';
 import JustSlider from './components/JustSlider.vue';
+import CharacterRing from './components/CharacterRing.vue';
 
-const currentGame = ref('JustSlider');
-const games = ['MirrorGame', 'AlignGame', 'SliderClick', 'JustSlider'];
+const currentGame = ref('CharacterRing');
+const games = ['CharacterRing', 'MirrorGame', 'AlignGame', 'SliderClick', 'JustSlider', ];
 </script>
 
 <template>
@@ -20,6 +21,7 @@ const games = ['MirrorGame', 'AlignGame', 'SliderClick', 'JustSlider'];
         <AlignGame v-if="currentGame === 'AlignGame'" class="game" />
         <SliderClick v-if="currentGame === 'SliderClick'" class="game" />
         <JustSlider v-if="currentGame === 'JustSlider'" class="game" />
+        <CharacterRing v-if="currentGame === 'CharacterRing'" class="game" />
     </div>
 </template>
 
