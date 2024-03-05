@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted, reactive, onBeforeUnmount } from 'vue';
 
 const image1 = ref(null);
 const image2 = ref(null);
@@ -68,6 +68,10 @@ const moveImageToTarget = (image) => {
     image.style.top = y1 + Math.sin(angle1) + 'px'; 
 };
 
+// before destroy, remove all targets
+onBeforeUnmount(() => {
+    clearTargets();
+});
 </script>
 
 <template>
