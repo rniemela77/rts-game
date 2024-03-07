@@ -10,6 +10,7 @@ const barAngle = ref(0);
 const sliderCss = computed(() => {
     return `top: ${sliderPosition.value}%;`;
 });
+const clickCombo = ref(0);
 
 const resetPosition = () => {
     sliderPosition.value = 0;
@@ -33,10 +34,8 @@ onMounted(() => {
     setInterval(() => {
         // move the slider with its acceleration
         if (sliderPosition.value >= 100) {
-            resetPosition();
-            resetAcceleration();
-            resetSpeed();
-            resetAngle();
+            handleMiss();
+            resetSlider();
         } else {
             sliderPosition.value += sliderSpeed.value;
             sliderSpeed.value *= sliderAcceleration.value;
@@ -44,77 +43,103 @@ onMounted(() => {
     }, 1000 / fps.value);
 });
 
-const resetCriticalZone = () => {
-    criticalZone.value = [Math.random() * 100, Math.random() * 100].sort((a, b) => a - b);
+const resetSlider = () => {
+    resetPosition();
+    resetAcceleration();
+    resetSpeed();
+    resetAngle();
+}
 
-    // ensure critical zone is at least 10 units 
-    if (criticalZone.value[1] - criticalZone.value[0] < 10) {
-        criticalZone.value[1] += 10;
-    }
+const criticalZoneSize = ref(20);
+const criticalZone = ref([[25, 45]]);
+const resetCriticalZones = () => {
+    criticalZone.value = [];
+    // const firstValue = Math.random() * (100 - criticalZoneSize.value);
+
+    createCriticalZone(Math.random() * (100 - criticalZoneSize.value));
+    createCriticalZone(Math.random() * (100 - (criticalZoneSize.value)));
+};
+const createCriticalZone = (firstValue) => {
+    criticalZone.value.push([
+        firstValue,
+        firstValue + criticalZoneSize.value
+    ].sort((a, b) => a - b));
 };
 
-const criticalZone = ref([25, 45]);
 
 const state = ref('Ready');
 
 const handleHit = () => {
-    state.value = 'Hit';
+    // state.value = 'Hit';
     hitEffect.value = true;
-    resetCriticalZone();
+    resetCriticalZones();
     resetPosition();
     resetSpeed();
     resetAngle();
-    sliderAcceleration.value += 0.02;
+    clickCombo.value += 1;
+    // sliderSpeed.value += 0.1;
+    sliderAcceleration.value += 0.01;
 
     setTimeout(() => {
         hitEffect.value = false;
-        state.value = 'Ready';
+        // state.value = 'Ready';
     }, 100);
 };
 
+const createHitMarker = () => {
+    // create hit marker
+    const marker = document.createElement('div');
+    marker.classList.add('marker');
+    marker.style.width = '100%';
+    marker.style.height = '0.5rem';
+    marker.style.background = 'red';
+    marker.style.opacity = '0.2';
+    marker.style.position = 'absolute';
+    marker.style.transition = 'all 0.5s linear';
+
+    document.querySelector('.slider').appendChild(marker);
+
+    // move the marker to the slider position
+    const markerPosition = sliderPosition.value > 100 ? 95 : sliderPosition.value;
+    marker.style.top = `${markerPosition}%`;
+
+    // remove the marker after 1s
+    setTimeout(() => {
+        marker.remove();
+    }, 500);
+};
+const handleMiss = () => {
+    clickCombo.value = 0;
+    createHitMarker();
+    // state.value = 'Miss';
+    resetCriticalZones();
+    resetPosition();
+    resetSpeed();
+    resetAngle();
+    // sliderAcceleration.value = 1.1;
+
+};
 const handleClick = () => {
-    console.log('Firing');
+    let hits = 0;
+    criticalZone.value.forEach(zone => {
+        if (sliderPosition.value >= zone[0] && sliderPosition.value <= zone[1]) {
+            hits += 1;
+        }
+    });
 
-
-    if (sliderPosition.value >= criticalZone.value[0] && sliderPosition.value <= criticalZone.value[1]) {
-        handleHit();
-    } else {
-        state.value = 'Miss';
-
-        // create hit marker
-        const marker = document.createElement('div');
-        marker.classList.add('marker');
-        marker.style.top = '0px';
-        marker.style.width = '100%';
-        marker.style.height = '0.5rem';
-        marker.style.background = 'red';
-        marker.style.opacity = '0.5';
-        marker.style.position = 'absolute';
-
-        document.querySelector('.slider').appendChild(marker);
-
-        // move the marker to the slider position
-        marker.style.top = sliderPosition.value + '%';
-
-
-        // remove the marker after 1s
-        setTimeout(() => {
-            marker.remove();
-        }, 500);
-
-        // 
-    }
+    hits > 0 ? handleHit() : handleMiss();
 };
 
 // hit effect
 const hitEffect = ref(false);
-const hitEffectCss = computed(() => {
+const sliderBarCss = computed(() => {
     // if hitEffect is true, apply the hit effect
     return {
-        'box-shadow': hitEffect.value ? '0 0 10px 10px red' : 'none',
-        'filter': hitEffect.value ? 'brightness(15) hue-rotate(200deg)' : '',
+        // 'transform-origin': `50% ${sliderPosition.value}%`,
+        'box-shadow': hitEffect.value ? '0px 0px 15px 0px rgb(255, 255, 255)' : '',
+        'filter': hitEffect.value ? 'brightness(15)' : '',
         'transform': `rotate(${barAngle.value}deg)`,
-        // 'transition': 'all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        // 'transition': 'all 0.05s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         // 'height': Math.random() * 10 + 5 + 'rem',
     }
 });
@@ -123,42 +148,51 @@ const hitEffectCss = computed(() => {
 <template>
     <div class="screenz">
         <!-- <GameBoard :cells="cells" /> -->
-        <div class="slider" :style="hitEffectCss">
+        <div class="slider" :style="sliderBarCss">
             <div class="slider-current" :style="sliderCss"></div>
-            <div class="slider-critical-zone"
-                :style="`height: ${criticalZone[1] - criticalZone[0]}%; top: ${criticalZone[0]}%;`"></div>
+            <div v-for="zone in criticalZone" :key="zone" class="slider-critical-zone"
+                :style="`height: ${zone[1] - zone[0]}%; top: ${zone[0]}%;`"></div>
         </div>
 
-
+        <div>
+            <span v-for="i in clickCombo" :key="i">
+                <span :style="'font-size: 2rem; ' +
+            'transition: all 0.5s linear; ' +
+            'filter: hue-rotate(' + clickCombo * 25 + 'deg); ' +
+            'z-index: -1; '
+            ">🔥</span>
+            </span>
+        </div>
         <div @mousedown="handleClick" class="btn">{{ state }}</div>
+
     </div>
 </template>
 
 <style scoped>
-
 .slider {
-    width: 1.5rem;
+    width: 1rem;
     height: 50vh;
     background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.1) 100%);
     position: relative;
-    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    /* clip-path: polygon(50% 0%, 0% 100%, 100% 100%); */
 }
 
 .slider-current {
     width: 100%;
-    height: 0.1rem;
+    height: 0.25rem;
     position: absolute;
     top: 0;
     left: 0;
     transform-origin: bottom;
     background: rgb(255, 255, 255);
+    box-shadow: 0px 0px 2px rgb(104, 0, 0);
     z-index: 1;
 }
 
 .slider-critical-zone {
     width: 100%;
     position: absolute;
-    background: rgb(168, 102, 15);
+    background: rgb(218, 163, 0);
     opacity: 0.6;
 }
 
