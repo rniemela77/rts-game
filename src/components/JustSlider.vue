@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 
 // game settings
-const fps = ref(24);
+const fps = ref(30);
 const sliderSpeed = ref(0);
 const sliderAcceleration = ref(0);
 const sliderPosition = ref(0);
@@ -11,15 +11,16 @@ const sliderCss = computed(() => {
     return `top: ${sliderPosition.value}%;`;
 });
 const clickCombo = ref(0);
+const maxClickCombo = ref(0);
 
 const resetPosition = () => {
     sliderPosition.value = 0;
 };
 const resetAcceleration = () => {
-    sliderAcceleration.value = 1.1;
+    sliderAcceleration.value = 1.05;
 };
 const resetSpeed = () => {
-    sliderSpeed.value = 0.3;
+    sliderSpeed.value = 0.2;
 };
 const resetAngle = () => {
     barAngle.value = Math.random() * 360;
@@ -54,10 +55,14 @@ const criticalZoneSize = ref(20);
 const criticalZone = ref([[25, 45]]);
 const resetCriticalZones = () => {
     criticalZone.value = [];
-    // const firstValue = Math.random() * (100 - criticalZoneSize.value);
 
-    createCriticalZone(Math.random() * (100 - criticalZoneSize.value));
-    createCriticalZone(Math.random() * (100 - (criticalZoneSize.value)));
+    // random number between 1 and 4
+    const random = Math.floor(Math.random() * 4) + 1;
+
+    // state.value = random;
+    for (let i = 0; i < random; i++) {
+        createCriticalZone(Math.random() * (100 - criticalZoneSize.value));
+    }
 };
 const createCriticalZone = (firstValue) => {
     criticalZone.value.push([
@@ -66,24 +71,30 @@ const createCriticalZone = (firstValue) => {
     ].sort((a, b) => a - b));
 };
 
+const addToClickCombo = () => {
+    clickCombo.value += 1;
+    if (clickCombo.value > maxClickCombo.value) {
+        maxClickCombo.value = clickCombo.value;
+    }
+};
 
 const state = ref('Ready');
 
 const handleHit = () => {
     // state.value = 'Hit';
-    hitEffect.value = true;
     resetCriticalZones();
     resetPosition();
     resetSpeed();
     resetAngle();
-    clickCombo.value += 1;
-    // sliderSpeed.value += 0.1;
+    addToClickCombo();
     sliderAcceleration.value += 0.01;
-
+    showHitEffect();
+};
+const showHitEffect = () => {
+    hitEffect.value = true;
     setTimeout(() => {
         hitEffect.value = false;
-        // state.value = 'Ready';
-    }, 100);
+    }, 50);
 };
 
 const createHitMarker = () => {
@@ -111,13 +122,10 @@ const createHitMarker = () => {
 const handleMiss = () => {
     clickCombo.value = 0;
     createHitMarker();
-    // state.value = 'Miss';
     resetCriticalZones();
     resetPosition();
     resetSpeed();
     resetAngle();
-    // sliderAcceleration.value = 1.1;
-
 };
 const handleClick = () => {
     let hits = 0;
@@ -139,7 +147,7 @@ const sliderBarCss = computed(() => {
         'box-shadow': hitEffect.value ? '0px 0px 15px 0px rgb(255, 255, 255)' : '',
         'filter': hitEffect.value ? 'brightness(15)' : '',
         'transform': `rotate(${barAngle.value}deg)`,
-        // 'transition': 'all 0.05s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        'transition': 'all 0.05s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         // 'height': Math.random() * 10 + 5 + 'rem',
     }
 });
@@ -155,6 +163,8 @@ const sliderBarCss = computed(() => {
         </div>
 
         <div>
+        {{  maxClickCombo }}
+        <br>
             <span v-for="i in clickCombo" :key="i">
                 <span :style="'font-size: 2rem; ' +
             'transition: all 0.5s linear; ' +
