@@ -1,111 +1,54 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, defineProps, onBeforeUnmount } from 'vue';
 import { store, sliders } from './SliderStore';
 
-const slider = sliders[0];
-
-const sliderCss = computed(() => {
-    return `top: ${slider.position}%;`;
+// slider prop
+const props = defineProps({
+    slider: Object,
 });
 
+
+
+const slider = props.slider;
+
+// remove the interval when the component is destroyed
+onBeforeUnmount(() => {
+    clearInterval(interval);
+});
+
+const interval = setInterval(() => {
+    if (slider.position >= 100) {
+        slider.handleMiss();
+        slider.resetPosition();
+        slider.resetAcceleration();
+        slider.resetSpeed();
+        slider.resetAngle();
+    } else {
+        slider.position += slider.speed;
+        slider.speed *= slider.acceleration;
+    }
+}, 1000 / store.fps);
 
 onMounted(() => {
     slider.resetSpeed();
     slider.resetAcceleration();
     slider.resetPosition();
     slider.resetAngle();
+    // slider.animateSlider();
 
-    setInterval(() => {
-        // move the slider with its acceleration
-        if (slider.position >= 100) {
-            handleMiss();
-            slider.resetPosition();
-            slider.resetAcceleration();
-            slider.resetSpeed();
-            slider.resetAngle();
-        } else {
-            slider.position += slider.speed;
-            slider.speed *= slider.acceleration;
-        }
-    }, 1000 / store.fps);
+    // assign to variable
+
+    // move the slider with its acceleration
 });
-
-const handleHit = () => {
-    slider.resetCriticalZones();
-    slider.resetPosition();
-    slider.resetSpeed();
-    slider.resetAngle();
-    store.addToClickCombo();
-    slider.acceleration += 0.01;
-    showHitEffect();
-};
-const showHitEffect = () => {
-    hitEffect.value = true;
-    setTimeout(() => {
-        hitEffect.value = false;
-    }, 50);
-};
-
-const createHitMarker = () => {
-    // create hit marker
-    const marker = document.createElement('div');
-    marker.classList.add('marker');
-    marker.style.width = '100%';
-    marker.style.height = '0.5rem';
-    marker.style.background = 'red';
-    marker.style.opacity = '0.2';
-    marker.style.position = 'absolute';
-    marker.style.transition = 'all 0.5s linear';
-
-    document.querySelector('.slider').appendChild(marker);
-
-    // move the marker to the slider position
-    const markerPosition = slider.position > 100 ? 95 : slider.position;
-    marker.style.top = `${markerPosition}%`;
-
-    // remove the marker after 1s
-    setTimeout(() => {
-        marker.remove();
-    }, 500);
-};
-const handleMiss = () => {
-    createHitMarker();
-    store.resetClickCombo();
-    slider.resetCriticalZones();
-    slider.resetPosition();
-    slider.resetAcceleration();
-    slider.resetSpeed();
-    slider.resetAngle();
-};
-const countHits = () => {
-    let hits = 0;
-
-    slider.criticalZones.forEach(zone => {
-        if (slider.position >= zone[0] && slider.position <= zone[1]) {
-            hits += 1;
-        }
-    });
-
-    return hits;
-};
-const handleClick = () => {
-    const hits = countHits();
-
-    if (!hits) handleMiss();
-
-    for (let i = 0; i < hits; i++) {
-        handleHit();
-    }
-};
-
-// hit effect
-const hitEffect = ref(false);
+const sliderCss = computed(() => {
+    return `top: ${slider.position}%;`;
+});
 const sliderBarCss = computed(() => {
     // if hitEffect is true, apply the hit effect
     return {
         // 'transform-origin': `50% ${sliderPosition.value}%`,
-        'box-shadow': hitEffect.value ? '0px 0px 15px 0px rgb(255, 255, 255)' : '',
-        'filter': hitEffect.value ? 'brightness(15)' : '',
+        'box-shadow': slider.hitEffect ? '0px 0px 15px 0px rgb(255, 255, 255)' : '',
+        'filter': slider.hitEffect ? 'brightness(15)' : '',
         'transform': `rotate(${slider.angle}deg)`,
         'transition': 'all 0.05s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         // 'height': Math.random() * 10 + 5 + 'rem',
@@ -120,8 +63,6 @@ const sliderBarCss = computed(() => {
             <div v-for="zone in slider.criticalZones" :key="zone" class="slider-critical-zone"
                 :style="`height: ${zone[1] - zone[0]}%; top: ${zone[0]}%;`"></div>
         </div>
-
-        <div @mousedown="handleClick" class="btn">Tap</div>
     </div>
 </template>
 
@@ -129,28 +70,42 @@ const sliderBarCss = computed(() => {
 .slider {
     width: 1rem;
     height: 50vh;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.1) 100%);
+    background: white;
+    border: 1px solid var(--primary);
+    /* background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.1) 100%); */
     position: relative;
     /* clip-path: polygon(50% 0%, 0% 100%, 100% 100%); */
 }
 
-.slider-current {
+.slider:after {
+    position: absolute;
+    content: '';
     width: 100%;
+    height: 100%;
+    /* background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.1) 100%); */
+    left: 0;
+    top: 0;
+    box-shadow: inset 0px 0px 0px 1px rgb(255, 255, 255);
+}
+
+.slider-current {
+    width: calc(100%);
     height: 0.25rem;
     position: absolute;
     top: 0;
     left: 0;
     transform-origin: bottom;
-    background: rgb(255, 255, 255);
-    box-shadow: 0px 0px 2px rgb(104, 0, 0);
+    background: black;
     z-index: 1;
 }
+
+
 
 .slider-critical-zone {
     width: 100%;
     position: absolute;
-    background: rgb(218, 163, 0);
-    opacity: 0.6;
+    background: rgb(255, 213, 0);
+    mix-blend-mode: multiply;
 }
 
 

@@ -34,7 +34,8 @@ const games = ['CharacterRing', 'MirrorGame', 'AlignGame', 'SliderClick', 'JustS
 .screen {
     width: 100%;
     height: 100%;
-    background-color: #123;
+    /* background-color: #123; */
+    background-color: rgb(249, 253, 255);
     position: fixed;
     top: 0;
     left: 0;
